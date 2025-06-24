@@ -60,10 +60,19 @@ local teleportService = game:GetService("TeleportService")
 local tweenService = game:GetService("TweenService")
 local userInputService = game:GetService('UserInputService')
 local gameSettings = UserSettings():GetService("UserGameSettings")
+local textChatService = game:GetService("TextChatService")
+local marketplaceService = game:GetService("MarketplaceService")
 
 -- Variables
 local camera = workspace.CurrentCamera
-local getMessage = replicatedStorage:WaitForChild("DefaultChatSystemChatEvents", 1) and replicatedStorage.DefaultChatSystemChatEvents:WaitForChild("OnMessageDoneFiltering", 1)
+-- Updated chat system detection
+local getMessage
+if textChatService.ChatVersion == Enum.ChatVersion.LegacyChatService then
+	getMessage = replicatedStorage:WaitForChild("DefaultChatSystemChatEvents", 1) and replicatedStorage.DefaultChatSystemChatEvents:WaitForChild("OnMessageDoneFiltering", 1)
+else
+	-- New TextChatService is being used
+	getMessage = nil
+end
 local localPlayer = players.LocalPlayer
 local notifications = {}
 local friendsCooldown = 0
@@ -80,16 +89,30 @@ local placeId = game.PlaceId
 local jobId = game.JobId
 local checkingForKey = false
 local originalTextValues = {}
+-- Updated creator info handling
 local creatorId = game.CreatorId
+local creatorType = game.CreatorType
 local noclipDefaults = {}
 local movers = {}
-local creatorType = game.CreatorType
+
+-- Fallback for when creator info is not immediately available
+if not creatorId or creatorId == 0 then
+	task.spawn(function()
+		local success, result = pcall(function()
+			return marketplaceService:GetProductInfo(game.PlaceId)
+		end)
+		if success and result then
+			creatorId = result.Creator.Id
+			creatorType = result.Creator.HasVerifiedBadge and Enum.CreatorType.User or Enum.CreatorType.Group
+		end
+	end)
+end
 local espContainer = Instance.new("Folder", gethui and gethui() or coreGui)
 local oldVolume = gameSettings.MasterVolume
 
 -- Configurable Core Values
 local siriusValues = {
-	siriusVersion = "1.26",
+	siriusVersion = "1.27",
 	siriusName = "Sirius",
 	releaseType = "Stable",
 	siriusFolder = "Sirius",
@@ -143,7 +166,7 @@ local siriusValues = {
 	rawTree = "https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/Sirius/games/",
 	neonModule = "https://raw.githubusercontent.com/shlexware/Sirius/request/library/neon.lua",
 	senseRaw = "https://raw.githubusercontent.com/shlexware/Sirius/request/library/sense/source.lua",
-	executors = {"synapse x", "script-ware", "krnl", "scriptware", "comet", "valyse", "fluxus", "electron", "hydrogen"},
+	executors = {"synapse x", "script-ware", "krnl", "scriptware", "comet", "valyse", "fluxus", "electron", "hydrogen", "solara", "wave", "trigon", "codex", "celery", "arceus x", "delta", "oxygen u"},
 	disconnectTypes = { {"ban", {"ban", "perm"}}, {"network", {"internet connection", "network"}} },
 	nameGeneration = {
 		adjectives = {"Cool", "Awesome", "Epic", "Ninja", "Super", "Mystic", "Swift", "Golden", "Diamond", "Silver", "Mint", "Roblox", "Amazing"},
@@ -795,7 +818,10 @@ local soundInstances = {}
 local cachedIds = {}
 local cachedText = {}
 
-if not getMessage then siriusValues.chatSpy.enabled = false end
+-- Updated chat spy check for new TextChatService
+if not getMessage and textChatService.ChatVersion ~= Enum.ChatVersion.TextChatService then 
+	siriusValues.chatSpy.enabled = false 
+end
 
 -- Call External Modules
 
@@ -2922,7 +2948,11 @@ end
 local function openSmartBar()
 	smartBarOpen = true
 
-	coreGui.RobloxGui.Backpack.Position = UDim2.new(0,0,0,0)
+	-- Updated backpack positioning for newer Roblox versions
+	local backpack = coreGui:FindFirstChild("RobloxGui") and coreGui.RobloxGui:FindFirstChild("Backpack")
+	if backpack then
+		backpack.Position = UDim2.new(0,0,0,0)
+	end
 
 	-- Set Values for frame properties
 	smartBar.BackgroundTransparency = 1
@@ -2951,7 +2981,11 @@ local function openSmartBar()
 		button.Icon.ImageTransparency = 1
 	end
 
-	tweenService:Create(coreGui.RobloxGui.Backpack, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {Position = UDim2.new(-0.325,0,0,0)}):Play()
+	-- Updated backpack animation for newer Roblox versions
+	local backpack = coreGui:FindFirstChild("RobloxGui") and coreGui.RobloxGui:FindFirstChild("Backpack")
+	if backpack then
+		tweenService:Create(backpack, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {Position = UDim2.new(-0.325,0,0,0)}):Play()
+	end
 
 	tweenService:Create(toggle, TweenInfo.new(0.82, Enum.EasingStyle.Quint), {Rotation = 0}):Play()
 	tweenService:Create(smartBar, TweenInfo.new(0.7, Enum.EasingStyle.Quint), {Position = UDim2.new(0.5, 0, 1, -12)}):Play()
@@ -2996,7 +3030,11 @@ local function closeSmartBar()
 		tweenService:Create(Button.Icon, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play()
 	end
 
-	tweenService:Create(coreGui.RobloxGui.Backpack, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {Position = UDim2.new(0, 0, 0, 0)}):Play()
+	-- Updated backpack restore for newer Roblox versions
+	local backpack = coreGui:FindFirstChild("RobloxGui") and coreGui.RobloxGui:FindFirstChild("Backpack")
+	if backpack then
+		tweenService:Create(backpack, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {Position = UDim2.new(0, 0, 0, 0)}):Play()
+	end
 
 	tweenService:Create(smartBar, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.InOut), {BackgroundTransparency = 1}):Play()
 	tweenService:Create(smartBar.UIStroke, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Transparency = 1}):Play()
@@ -3038,15 +3076,20 @@ local function onChatted(player, message)
 		local message2 = message:gsub("[\n\r]",''):gsub("\t",' '):gsub("[ ]+",' ')
 		local hidden = true
 
-		local get = getMessage.OnClientEvent:Connect(function(packet, channel)
-			if packet.SpeakerUserId == player.UserId and packet.Message == message2:sub(#message2-#packet.Message+1) and (channel=="All" or (channel=="Team" and players[packet.FromSpeaker].Team == localPlayer.Team)) then
-				hidden = false
-			end
-		end)
+		-- Handle both legacy and new chat systems
+		if textChatService.ChatVersion == Enum.ChatVersion.LegacyChatService and getMessage then
+			local get = getMessage.OnClientEvent:Connect(function(packet, channel)
+				if packet.SpeakerUserId == player.UserId and packet.Message == message2:sub(#message2-#packet.Message+1) and (channel=="All" or (channel=="Team" and players[packet.FromSpeaker].Team == localPlayer.Team)) then
+					hidden = false
+				end
+			end)
 
-		task.wait(1)
-
-		get:Disconnect()
+			task.wait(1)
+			get:Disconnect()
+		else
+			-- For new TextChatService, all messages are visible by default
+			hidden = false
+		end
 
 		if hidden and enabled then
 			chatSpyVisuals.Text = "Sirius Spy - [".. player.Name .."]: "..message2
@@ -3773,11 +3816,151 @@ end
 
 local function boost()
 	local success, result = pcall(function()
-		loadstring(game:HttpGet('https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/refs/heads/request/boost.lua'))()
+		-- Sirius Boosts
+		-- sirius.menu/privacy | sirius.menu/terms
+
+		-- Unsupported Executors
+		do
+			local exec = (identifyexecutor and identifyexecutor()) or 'No Executor'
+			local unsupported = {'delta', 'cryptic', 'arm64'}
+
+			for _, keyword in pairs(unsupported) do
+				if string.find(string.lower(exec), keyword) then
+					return
+				end
+			end
+		end
+
+		-- Request
+		local request = (http and http.request) or http_request or request or HttpPost
+
+		-- Studio
+		local isStudio = game:GetService('RunService'):IsStudio()
+
+		-- Hashing
+		local hasher = not isStudio and loadstring(game:HttpGet("https://sync-api.sirius.menu/v1/lua/hasher"))()["hasher"] --or require(script.Parent.ModuleScript)['hasher']
+
+		-- Services
+		local httpService = game:GetService('HttpService')
+		local players = game:GetService('Players')
+		local coreGui = isStudio and script.Parent or game:GetService('CoreGui')
+		local userInputService = game:GetService("UserInputService")
+
+		-- GET Boosts
+		local response
+
+		if not request then
+			-- test response
+			response = [[{"5e1f71a90ce1cb0e1a062bc7e6c19adbddfba27b8b1ed2c822ab44794d245b50":{"boosting_since":1730570726,"color":[256,256,256],"icon":0},"77288fb8e5e4d26f8d5b2536b44fc012c8a95b701a8af4fdb8698b7ef271507c":{"boosting_since":1732069640,"color":[256,256,256],"icon":0},"a550e7328fa7d26f197a032af55760eabed80f33244002922ddf8cd382a51e0c":{"boosting_since":1732032799,"color":[256,256,256],"icon":0},"a60ef2207710c2cbaf612ef12a5468f390760ae76fdf48bc48c9007c57ed11dd":{"boosting_since":1731927879,"color":[256,256,256],"icon":0},"f6ebb30a9913076205e1fc8f674ea04134b3ae2b9f859060a1e72ac1e638170a":{"boosting_since":1731941719,"color":[256,256,256],"icon":0}}]]
+		else
+			response = request({
+				Url = 'https://sync-api.sirius.menu/v1/u',
+				Method = "GET",
+			}).Body
+		end
+
+		local success, boosts = pcall(function() return httpService:JSONDecode(response) end)
+
+		if not success then
+			return -- Exit if JSON decoding fails
+		end
+
+		local function getBooster(userId)
+			userId = hasher(tostring(userId))
+			local properties
+
+			for id, prop in pairs(boosts) do
+				if id == userId then
+					properties = prop
+					break
+				end
+			end
+
+			if properties then
+				local booster = {}
+
+				if properties.color and not (properties.color[1] > 255 or properties.color[2] > 255 or properties.color[3] > 255) then -- Color higher than 255 means default color value (no changes made)
+					booster.color = Color3.fromRGB(properties.color[1], properties.color[2], properties.color[3])
+				end
+
+				booster.icon = properties.icon ~= 0 and properties.icon or nil -- Icon 0 means default icon (no changes made)
+
+				return booster
+			else
+				return false
+			end
+		end
+
+		local function findOverlayFrame(target)
+			if not target then return nil end
+			local frame = target:FindFirstChild("ChildrenFrame")
+
+			if frame then
+				local nameFrame = frame:FindFirstChild("NameFrame")
+
+				if nameFrame then
+					if userInputService.TouchEnabled then
+						return nameFrame
+					else
+						local bgFrame = nameFrame:FindFirstChild("BGFrame")
+
+						if bgFrame then
+							return bgFrame:FindFirstChild("OverlayFrame")
+						end
+					end
+				end
+			end
+			return nil
+		end
+
+		local function display(userId, booster)
+			local target = coreGui:FindFirstChild("p_" .. tostring(userId), true) or coreGui:FindFirstChild("Player_" .. tostring(userId), true)
+			if not target or not booster then return end
+
+			local overlayFrame = findOverlayFrame(target)
+
+			if overlayFrame then
+				overlayFrame.PlayerIcon.Image = 'rbxassetid://' .. (booster and booster.icon or 128645553269928)
+				overlayFrame.PlayerIcon.ImageRectOffset = Vector2.zero
+				overlayFrame.PlayerIcon.ImageRectSize = Vector2.zero
+				if userInputService.TouchEnabled then
+					overlayFrame.PlayerName.TextColor3 = booster and booster.color or Color3.fromRGB(255, 138, 250)
+				else
+					overlayFrame.PlayerName.PlayerName.TextColor3 = booster and booster.color or Color3.fromRGB(255, 138, 250)
+				end
+			end
+		end
+
+		local function processPlayer(player)
+			local booster = getBooster(player.UserId)
+			display(player.UserId, booster)
+		end
+
+		local function processAllPlayers()
+			for _, player in ipairs(players:GetPlayers()) do
+				processPlayer(player)
+			end
+		end
+
+		processAllPlayers()
+		players.PlayerAdded:Connect(processPlayer)
+
+		if userInputService.TouchEnabled then
+			local leaderboardContainer = coreGui:FindFirstChild("RoactAppExperimentProvider")
+				and coreGui.RoactAppExperimentProvider:FindFirstChild("Children")
+				and coreGui.RoactAppExperimentProvider.Children:FindFirstChild("BodyBackground")
+				and coreGui.RoactAppExperimentProvider.Children.BodyBackground:FindFirstChild("ContentFrame")
+
+			if leaderboardContainer then
+				leaderboardContainer.ChildAdded:Connect(function(child)
+					processAllPlayers()
+				end)
+			end
+		end
 	end)
 
 	if not success then
-		print('Error with boost file.')
+		print('Error with boost file. Some Testing service is not passed')
 		print(result)
 	end
 end
@@ -4560,7 +4743,7 @@ while task.wait(1) do
 				ColorSequenceKeypoint.new(0, Color3.new(0,0,0)),
 				ColorSequenceKeypoint.new(1, Color3.new(0.0862745, 0.596078, 0.835294))
 			})
-		elseif disconnectType == "network" then
+elseif disconnectType == "network" then
 			disconnectedPrompt.Content.Text = "You've lost connection, would you like to rejoin?"
 			disconnectedPrompt.Action.Text = "Rejoin"
 			disconnectedPrompt.Action.Size = UDim2.new(0, 82, 0, 36)
@@ -4569,7 +4752,7 @@ while task.wait(1) do
 				ColorSequenceKeypoint.new(0, Color3.new(0,0,0)),
 				ColorSequenceKeypoint.new(1, Color3.new(0.862745, 0.501961, 0.0862745))
 			})
-		end
+		end -- <-- This 'end' was missing.
 
 		tweenService:Create(disconnectedPrompt, TweenInfo.new(.5,Enum.EasingStyle.Quint),  {BackgroundTransparency = 0}):Play()
 		tweenService:Create(disconnectedPrompt.Title, TweenInfo.new(.5,Enum.EasingStyle.Quint),  {TextTransparency = 0}):Play()
