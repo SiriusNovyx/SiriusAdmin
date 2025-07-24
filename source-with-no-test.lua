@@ -1,6 +1,6 @@
 --[[
 
-Sirius
+Sirius Edit
 
 © 2024 Sirius 
 All Rights Reserved.
