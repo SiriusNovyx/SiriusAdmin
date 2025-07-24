@@ -209,28 +209,67 @@ local siriusValues = {
 		fpsQueue = {},
 	},
 	actions = {
+	        {
+	name = "Noclip",
+	images = {14385986465, 9134787693},
+	color = Color3.fromRGB(0, 170, 127),
+	enabled = false,
+	rotateWhileEnabled = false,
+	callback = function(value)
+		-- Mobile detection
+		local isMobile = userInputService.TouchEnabled and not userInputService.KeyboardEnabled
+		
+		if value then
+			queueNotification("Noclip Enabled", isMobile and "Tap to walk through walls" or "Walk through walls and objects", 9134787693)
+		else
+			queueNotification("Noclip Disabled", "Collision restored", 14385986465)
+		end
+	end,
+},
 		{
-			name = "Noclip",
-			images = {14385986465, 9134787693},
-			color = Color3.fromRGB(0, 170, 127),
-			enabled = false,
-			rotateWhileEnabled = false,
-			callback = function() end,
-		},
-		{
-			name = "Flight",
-			images = {9134755504, 14385992605},
-			color = Color3.fromRGB(170, 37, 46),
-			enabled = false,
-			rotateWhileEnabled = false,
-			callback = function(value)
-				local character = localPlayer.Character
-				local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-				if humanoid then
-					humanoid.PlatformStand = value
+	name = "Flight",
+	images = {9134755504, 14385992605},
+	color = Color3.fromRGB(170, 37, 46),
+	enabled = false,
+	rotateWhileEnabled = false,
+	callback = function(value)
+		local character = localPlayer.Character
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		if humanoid then
+			humanoid.PlatformStand = value
+		end
+		
+		-- Mobile detection
+		local isMobile = userInputService.TouchEnabled and not userInputService.KeyboardEnabled
+		
+		if value then
+			-- Enable flight
+			if isMobile then
+				-- Create mobile controls
+				local controls = getgenv().siriusMobileFlightControls or createMobileFlightControls()
+				controls.Enabled = true
+				getgenv().siriusMobileFlightControls = controls
+				
+				-- Mobile flight notification
+				queueNotification("Flight Enabled", "Use the on-screen controls to fly around", 9134755504)
+			else
+				-- Desktop flight notification
+				queueNotification("Flight Enabled", "Use WASD to move, Space/Shift for up/down", 9134755504)
+			end
+		else
+			-- Disable flight
+			if getgenv().siriusMobileFlightControls then
+				getgenv().siriusMobileFlightControls.Enabled = false
+				-- Clear active buttons
+				if getgenv().siriusMobileFlightControls.activeButtons then
+					table.clear(getgenv().siriusMobileFlightControls.activeButtons)
 				end
-			end,
-		},
+			end
+			
+			queueNotification("Flight Disabled", "You are now walking normally", 14385992605)
+		end
+	end,
+},
 		{
 			name = "Refresh",
 			images = {9134761478, 9134761478},
@@ -4543,47 +4582,65 @@ runService.Heartbeat:Connect(function()
 			movers = { bodyVelocity, bodyGyro, bodyAngularVelocity }
 		end
 
-		-- Fly
-		if siriusValues.actions[2].enabled then
-			local camCFrame = camera.CFrame
-			local velocity = Vector3.zero
-			local rotation = camCFrame.Rotation
-
-			if userInputService:IsKeyDown(Enum.KeyCode.W) then
-				velocity += camCFrame.LookVector
-				rotation *= CFrame.Angles(math.rad(-40), 0, 0)
+		-- Enhanced flight with mobile support
+if siriusValues.actions[2].enabled then
+	local velocity, camCFrame
+	local isMobile = userInputService.TouchEnabled and not userInputService.KeyboardEnabled
+	local rotation = camera.CFrame.Rotation
+	
+	if isMobile then
+		velocity, camCFrame = getMobileFlightInput()
+		-- Update speed label if controls exist
+		if getgenv().siriusMobileFlightControls and getgenv().siriusMobileFlightControls.Enabled then
+			local speedLabel = getgenv().siriusMobileFlightControls.Container:FindFirstChild("SpeedLabel")
+			if speedLabel then
+				speedLabel.Text = "Speed: " .. siriusValues.sliders[3].value
 			end
-			if userInputService:IsKeyDown(Enum.KeyCode.S) then
-				velocity -= camCFrame.LookVector
-				rotation *= CFrame.Angles(math.rad(40), 0, 0)
-			end
-			if userInputService:IsKeyDown(Enum.KeyCode.D) then
-				velocity += camCFrame.RightVector
-				rotation *= CFrame.Angles(0, 0, math.rad(-40))
-			end
-			if userInputService:IsKeyDown(Enum.KeyCode.A) then
-				velocity -= camCFrame.RightVector
-				rotation *= CFrame.Angles(0, 0, math.rad(40))
-			end
-			if userInputService:IsKeyDown(Enum.KeyCode.Space) then
-				velocity += Vector3.yAxis
-			end
-			if userInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
-				velocity -= Vector3.yAxis
-			end
-
-			local tweenInfo = TweenInfo.new(0.5)
-			tweenService:Create(bodyVelocity, tweenInfo, { Velocity = velocity * siriusValues.sliders[3].value * 45 }):Play()
-			bodyVelocity.Parent = primaryPart
-
-			if not siriusValues.actions[6].enabled then
-				tweenService:Create(bodyGyro, tweenInfo, { CFrame = rotation }):Play()
-				bodyGyro.Parent = primaryPart
-			end
-		else
-			bodyVelocity.Parent = nil
-			bodyGyro.Parent = nil
 		end
+	else
+		-- Desktop input handling
+		camCFrame = camera.CFrame
+		velocity = Vector3.zero
+		rotation = camCFrame.Rotation
+		
+		if userInputService:IsKeyDown(Enum.KeyCode.W) then
+			velocity = velocity + camCFrame.LookVector
+			rotation = rotation * CFrame.Angles(math.rad(-40), 0, 0)
+		end
+		if userInputService:IsKeyDown(Enum.KeyCode.S) then
+			velocity = velocity - camCFrame.LookVector
+			rotation = rotation * CFrame.Angles(math.rad(40), 0, 0)
+		end
+		if userInputService:IsKeyDown(Enum.KeyCode.D) then
+			velocity = velocity + camCFrame.RightVector
+			rotation = rotation * CFrame.Angles(0, 0, math.rad(-40))
+		end
+		if userInputService:IsKeyDown(Enum.KeyCode.A) then
+			velocity = velocity - camCFrame.RightVector
+			rotation = rotation * CFrame.Angles(0, 0, math.rad(40))
+		end
+		if userInputService:IsKeyDown(Enum.KeyCode.Space) then
+			velocity = velocity + Vector3.new(0, 1, 0)
+		end
+		if userInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+			velocity = velocity + Vector3.new(0, -1, 0)
+		end
+	end
+
+	local tweenInfo = TweenInfo.new(0.5)
+	tweenService:Create(bodyVelocity, tweenInfo, { 
+		Velocity = velocity * siriusValues.sliders[3].value * 45 
+	}):Play()
+	bodyVelocity.Parent = primaryPart
+
+	if not siriusValues.actions[6].enabled then
+		tweenService:Create(bodyGyro, tweenInfo, { CFrame = rotation }):Play()
+		bodyGyro.Parent = primaryPart
+	end
+else
+	bodyVelocity.Parent = nil
+	bodyGyro.Parent = nil
+end
 	end
 end)
 
