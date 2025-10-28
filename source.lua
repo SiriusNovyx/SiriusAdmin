@@ -88,7 +88,7 @@ local oldVolume = gameSettings.MasterVolume
 
 -- Configurable Core Values
 local siriusValues = {
-	siriusVersion = "1.24",
+	siriusVersion = "1.27",
 	siriusName = "Sirius",
 	releaseType = "Stable",
 	siriusFolder = "Sirius",
@@ -4605,4 +4605,5 @@ while task.wait(1) do
 		end
 	end
 end
+
 
