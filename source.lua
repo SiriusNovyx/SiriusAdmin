@@ -1,8 +1,4 @@
---[[
-	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
-]]
---[[
-
+--[[ 
 Sirius
 
 © 2023 Sirius Software Ltd. 
@@ -4609,3 +4605,4 @@ while task.wait(1) do
 		end
 	end
 end
+
