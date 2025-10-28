@@ -1,8 +1,11 @@
 --[[
+	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
+]]
+--[[
 
 Sirius
 
-© 2024 Sirius 
+© 2023 Sirius Software Ltd. 
 All Rights Reserved.
 
 --]]
@@ -60,19 +63,10 @@ local teleportService = game:GetService("TeleportService")
 local tweenService = game:GetService("TweenService")
 local userInputService = game:GetService('UserInputService')
 local gameSettings = UserSettings():GetService("UserGameSettings")
-local textChatService = game:GetService("TextChatService")
-local marketplaceService = game:GetService("MarketplaceService")
 
 -- Variables
 local camera = workspace.CurrentCamera
--- Updated chat system detection
-local getMessage
-if textChatService.ChatVersion == Enum.ChatVersion.LegacyChatService then
-	getMessage = replicatedStorage:WaitForChild("DefaultChatSystemChatEvents", 1) and replicatedStorage.DefaultChatSystemChatEvents:WaitForChild("OnMessageDoneFiltering", 1)
-else
-	-- New TextChatService is being used
-	getMessage = nil
-end
+local getMessage = replicatedStorage:WaitForChild("DefaultChatSystemChatEvents", 1) and replicatedStorage.DefaultChatSystemChatEvents:WaitForChild("OnMessageDoneFiltering", 1)
 local localPlayer = players.LocalPlayer
 local notifications = {}
 local friendsCooldown = 0
@@ -89,30 +83,16 @@ local placeId = game.PlaceId
 local jobId = game.JobId
 local checkingForKey = false
 local originalTextValues = {}
--- Updated creator info handling
 local creatorId = game.CreatorId
-local creatorType = game.CreatorType
 local noclipDefaults = {}
 local movers = {}
-
--- Fallback for when creator info is not immediately available
-if not creatorId or creatorId == 0 then
-	task.spawn(function()
-		local success, result = pcall(function()
-			return marketplaceService:GetProductInfo(game.PlaceId)
-		end)
-		if success and result then
-			creatorId = result.Creator.Id
-			creatorType = result.Creator.HasVerifiedBadge and Enum.CreatorType.User or Enum.CreatorType.Group
-		end
-	end)
-end
+local creatorType = game.CreatorType
 local espContainer = Instance.new("Folder", gethui and gethui() or coreGui)
 local oldVolume = gameSettings.MasterVolume
 
 -- Configurable Core Values
 local siriusValues = {
-	siriusVersion = "1.27",
+	siriusVersion = "1.24",
 	siriusName = "Sirius",
 	releaseType = "Stable",
 	siriusFolder = "Sirius",
@@ -166,7 +146,7 @@ local siriusValues = {
 	rawTree = "https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/Sirius/games/",
 	neonModule = "https://raw.githubusercontent.com/shlexware/Sirius/request/library/neon.lua",
 	senseRaw = "https://raw.githubusercontent.com/shlexware/Sirius/request/library/sense/source.lua",
-	executors = {"synapse x", "script-ware", "krnl", "scriptware", "comet", "valyse", "fluxus", "electron", "hydrogen", "solara", "wave", "trigon", "codex", "celery", "arceus x", "delta", "oxygen u"},
+	executors = {"synapse x", "script-ware", "krnl", "scriptware", "comet", "valyse", "fluxus", "electron", "hydrogen"},
 	disconnectTypes = { {"ban", {"ban", "perm"}}, {"network", {"internet connection", "network"}} },
 	nameGeneration = {
 		adjectives = {"Cool", "Awesome", "Epic", "Ninja", "Super", "Mystic", "Swift", "Golden", "Diamond", "Silver", "Mint", "Roblox", "Amazing"},
@@ -818,10 +798,7 @@ local soundInstances = {}
 local cachedIds = {}
 local cachedText = {}
 
--- Updated chat spy check for new TextChatService
-if not getMessage and textChatService.ChatVersion ~= Enum.ChatVersion.TextChatService then 
-	siriusValues.chatSpy.enabled = false 
-end
+if not getMessage then siriusValues.chatSpy.enabled = false end
 
 -- Call External Modules
 
@@ -829,232 +806,232 @@ end
 local httpRequest = originalRequest
 
 -- Neon Module
---local neonModule = (function() -- Open sourced neon module
---	local module = {}
---	do
---		local function IsNotNaN(x)
---			return x == x
---		end
---		local continued = IsNotNaN(camera:ScreenPointToRay(0,0).Origin.x)
---		while not continued do
---			runService.RenderStepped:wait()
---			continued = IsNotNaN(camera:ScreenPointToRay(0,0).Origin.x)
---		end
---	end
+local neonModule = (function() -- Open sourced neon module
+	local module = {}
+	do
+		local function IsNotNaN(x)
+			return x == x
+		end
+		local continued = IsNotNaN(camera:ScreenPointToRay(0,0).Origin.x)
+		while not continued do
+			runService.RenderStepped:wait()
+			continued = IsNotNaN(camera:ScreenPointToRay(0,0).Origin.x)
+		end
+	end
 
---	local RootParent = camera
---	local root
---	local binds = {}
+	local RootParent = camera
+	local root
+	local binds = {}
 
---	local function getRoot()
---		if root then 
---			return root
---		else
---			root = Instance.new('Folder', RootParent)
---			root.Name = 'neon'
---			return root
---		end
---	end
+	local function getRoot()
+		if root then 
+			return root
+		else
+			root = Instance.new('Folder', RootParent)
+			root.Name = 'neon'
+			return root
+		end
+	end
 
---	local function destroyRoot()
---		if root then 
---			root:Destroy()
---			root = nil
---		end
---	end
+	local function destroyRoot()
+		if root then 
+			root:Destroy()
+			root = nil
+		end
+	end
 
---	local GenUid; do
---		local id = 0
---		function GenUid()
---			id = id + 1
---			return 'neon::'..tostring(id)
---		end
---	end
+	local GenUid; do
+		local id = 0
+		function GenUid()
+			id = id + 1
+			return 'neon::'..tostring(id)
+		end
+	end
 
---	local DrawQuad; do
---		local acos, max, pi, sqrt = math.acos, math.max, math.pi, math.sqrt
---		local sz = 0.2
+	local DrawQuad; do
+		local acos, max, pi, sqrt = math.acos, math.max, math.pi, math.sqrt
+		local sz = 0.2
 
---		local function DrawTriangle(v1, v2, v3, p0, p1)
---			local s1 = (v1 - v2).magnitude
---			local s2 = (v2 - v3).magnitude
---			local s3 = (v3 - v1).magnitude
---			local smax = max(s1, s2, s3)
---			local A, B, C
---			if s1 == smax then
---				A, B, C = v1, v2, v3
---			elseif s2 == smax then
---				A, B, C = v2, v3, v1
---			elseif s3 == smax then
---				A, B, C = v3, v1, v2
---			end
+		local function DrawTriangle(v1, v2, v3, p0, p1)
+			local s1 = (v1 - v2).magnitude
+			local s2 = (v2 - v3).magnitude
+			local s3 = (v3 - v1).magnitude
+			local smax = max(s1, s2, s3)
+			local A, B, C
+			if s1 == smax then
+				A, B, C = v1, v2, v3
+			elseif s2 == smax then
+				A, B, C = v2, v3, v1
+			elseif s3 == smax then
+				A, B, C = v3, v1, v2
+			end
 
---			local para = ( (B-A).x*(C-A).x + (B-A).y*(C-A).y + (B-A).z*(C-A).z ) / (A-B).magnitude
---			local perp = sqrt((C-A).magnitude^2 - para*para)
---			local dif_para = (A - B).magnitude - para
+			local para = ( (B-A).x*(C-A).x + (B-A).y*(C-A).y + (B-A).z*(C-A).z ) / (A-B).magnitude
+			local perp = sqrt((C-A).magnitude^2 - para*para)
+			local dif_para = (A - B).magnitude - para
 
---			local st = CFrame.new(B, A)
---			local za = CFrame.Angles(pi/2,0,0)
+			local st = CFrame.new(B, A)
+			local za = CFrame.Angles(pi/2,0,0)
 
---			local cf0 = st
+			local cf0 = st
 
---			local Top_Look = (cf0 * za).lookVector
---			local Mid_Point = A + CFrame.new(A, B).LookVector * para
---			local Needed_Look = CFrame.new(Mid_Point, C).LookVector
---			local dot = Top_Look.x*Needed_Look.x + Top_Look.y*Needed_Look.y + Top_Look.z*Needed_Look.z
+			local Top_Look = (cf0 * za).lookVector
+			local Mid_Point = A + CFrame.new(A, B).LookVector * para
+			local Needed_Look = CFrame.new(Mid_Point, C).LookVector
+			local dot = Top_Look.x*Needed_Look.x + Top_Look.y*Needed_Look.y + Top_Look.z*Needed_Look.z
 
---			local ac = CFrame.Angles(0, 0, acos(dot))
+			local ac = CFrame.Angles(0, 0, acos(dot))
 
---			cf0 = cf0 * ac
---			if ((cf0 * za).lookVector - Needed_Look).magnitude > 0.01 then
---				cf0 = cf0 * CFrame.Angles(0, 0, -2*acos(dot))
---			end
---			cf0 = cf0 * CFrame.new(0, perp/2, -(dif_para + para/2))
+			cf0 = cf0 * ac
+			if ((cf0 * za).lookVector - Needed_Look).magnitude > 0.01 then
+				cf0 = cf0 * CFrame.Angles(0, 0, -2*acos(dot))
+			end
+			cf0 = cf0 * CFrame.new(0, perp/2, -(dif_para + para/2))
 
---			local cf1 = st * ac * CFrame.Angles(0, pi, 0)
---			if ((cf1 * za).lookVector - Needed_Look).magnitude > 0.01 then
---				cf1 = cf1 * CFrame.Angles(0, 0, 2*acos(dot))
---			end
---			cf1 = cf1 * CFrame.new(0, perp/2, dif_para/2)
+			local cf1 = st * ac * CFrame.Angles(0, pi, 0)
+			if ((cf1 * za).lookVector - Needed_Look).magnitude > 0.01 then
+				cf1 = cf1 * CFrame.Angles(0, 0, 2*acos(dot))
+			end
+			cf1 = cf1 * CFrame.new(0, perp/2, dif_para/2)
 
---			if not p0 then
---				p0 = Instance.new('Part')
---				p0.FormFactor = 'Custom'
---				p0.TopSurface = 0
---				p0.BottomSurface = 0
---				p0.Anchored = true
---				p0.CanCollide = false
---				p0.Material = 'Glass'
---				p0.Size = Vector3.new(sz, sz, sz)
---				local mesh = Instance.new('SpecialMesh', p0)
---				mesh.MeshType = 2
---				mesh.Name = 'WedgeMesh'
---			end
---			p0.WedgeMesh.Scale = Vector3.new(0, perp/sz, para/sz)
---			p0.CFrame = cf0
+			if not p0 then
+				p0 = Instance.new('Part')
+				p0.FormFactor = 'Custom'
+				p0.TopSurface = 0
+				p0.BottomSurface = 0
+				p0.Anchored = true
+				p0.CanCollide = false
+				p0.Material = 'Glass'
+				p0.Size = Vector3.new(sz, sz, sz)
+				local mesh = Instance.new('SpecialMesh', p0)
+				mesh.MeshType = 2
+				mesh.Name = 'WedgeMesh'
+			end
+			p0.WedgeMesh.Scale = Vector3.new(0, perp/sz, para/sz)
+			p0.CFrame = cf0
 
---			if not p1 then
---				p1 = p0:clone()
---			end
---			p1.WedgeMesh.Scale = Vector3.new(0, perp/sz, dif_para/sz)
---			p1.CFrame = cf1
+			if not p1 then
+				p1 = p0:clone()
+			end
+			p1.WedgeMesh.Scale = Vector3.new(0, perp/sz, dif_para/sz)
+			p1.CFrame = cf1
 
---			return p0, p1
---		end
+			return p0, p1
+		end
 
---		function DrawQuad(v1, v2, v3, v4, parts)
---			parts[1], parts[2] = DrawTriangle(v1, v2, v3, parts[1], parts[2])
---			parts[3], parts[4] = DrawTriangle(v3, v2, v4, parts[3], parts[4])
---		end
---	end
+		function DrawQuad(v1, v2, v3, v4, parts)
+			parts[1], parts[2] = DrawTriangle(v1, v2, v3, parts[1], parts[2])
+			parts[3], parts[4] = DrawTriangle(v3, v2, v4, parts[3], parts[4])
+		end
+	end
 
---	function module:BindFrame(frame, properties)
---		if binds[frame] then
---			return binds[frame].parts
---		end
+	function module:BindFrame(frame, properties)
+		if binds[frame] then
+			return binds[frame].parts
+		end
 
---		local uid = GenUid()
---		local parts = {}
---		local f = Instance.new('Folder', getRoot())
---		f.Name = frame.Name
+		local uid = GenUid()
+		local parts = {}
+		local f = Instance.new('Folder', getRoot())
+		f.Name = frame.Name
 
---		local parents = {}
---		do
---			local function add(child)
---				if child:IsA'GuiObject' then
---					parents[#parents + 1] = child
---					add(child.Parent)
---				end
---			end
---			add(frame)
---		end
+		local parents = {}
+		do
+			local function add(child)
+				if child:IsA'GuiObject' then
+					parents[#parents + 1] = child
+					add(child.Parent)
+				end
+			end
+			add(frame)
+		end
 
---		local function UpdateOrientation(fetchProps)
---			local zIndex = 1 - 0.05*frame.ZIndex
---			local tl, br = frame.AbsolutePosition, frame.AbsolutePosition + frame.AbsoluteSize
---			local tr, bl = Vector2.new(br.x, tl.y), Vector2.new(tl.x, br.y)
---			do
---				local rot = 0
---				for _, v in ipairs(parents) do
---					rot = rot + v.Rotation
---				end
---				if rot ~= 0 and rot%180 ~= 0 then
---					local mid = tl:lerp(br, 0.5)
---					local s, c = math.sin(math.rad(rot)), math.cos(math.rad(rot))
---					local vec = tl
---					tl = Vector2.new(c*(tl.x - mid.x) - s*(tl.y - mid.y), s*(tl.x - mid.x) + c*(tl.y - mid.y)) + mid
---					tr = Vector2.new(c*(tr.x - mid.x) - s*(tr.y - mid.y), s*(tr.x - mid.x) + c*(tr.y - mid.y)) + mid
---					bl = Vector2.new(c*(bl.x - mid.x) - s*(bl.y - mid.y), s*(bl.x - mid.x) + c*(bl.y - mid.y)) + mid
---					br = Vector2.new(c*(br.x - mid.x) - s*(br.y - mid.y), s*(br.x - mid.x) + c*(br.y - mid.y)) + mid
---				end
---			end
---			DrawQuad(
---				camera:ScreenPointToRay(tl.x, tl.y, zIndex).Origin, 
---				camera:ScreenPointToRay(tr.x, tr.y, zIndex).Origin, 
---				camera:ScreenPointToRay(bl.x, bl.y, zIndex).Origin, 
---				camera:ScreenPointToRay(br.x, br.y, zIndex).Origin, 
---				parts
---			)
---			if fetchProps then
---				for _, pt in pairs(parts) do
---					pt.Parent = f
---				end
---				for propName, propValue in pairs(properties) do
---					for _, pt in pairs(parts) do
---						pt[propName] = propValue
---					end
---				end
---			end
---		end
+		local function UpdateOrientation(fetchProps)
+			local zIndex = 1 - 0.05*frame.ZIndex
+			local tl, br = frame.AbsolutePosition, frame.AbsolutePosition + frame.AbsoluteSize
+			local tr, bl = Vector2.new(br.x, tl.y), Vector2.new(tl.x, br.y)
+			do
+				local rot = 0
+				for _, v in ipairs(parents) do
+					rot = rot + v.Rotation
+				end
+				if rot ~= 0 and rot%180 ~= 0 then
+					local mid = tl:lerp(br, 0.5)
+					local s, c = math.sin(math.rad(rot)), math.cos(math.rad(rot))
+					local vec = tl
+					tl = Vector2.new(c*(tl.x - mid.x) - s*(tl.y - mid.y), s*(tl.x - mid.x) + c*(tl.y - mid.y)) + mid
+					tr = Vector2.new(c*(tr.x - mid.x) - s*(tr.y - mid.y), s*(tr.x - mid.x) + c*(tr.y - mid.y)) + mid
+					bl = Vector2.new(c*(bl.x - mid.x) - s*(bl.y - mid.y), s*(bl.x - mid.x) + c*(bl.y - mid.y)) + mid
+					br = Vector2.new(c*(br.x - mid.x) - s*(br.y - mid.y), s*(br.x - mid.x) + c*(br.y - mid.y)) + mid
+				end
+			end
+			DrawQuad(
+				camera:ScreenPointToRay(tl.x, tl.y, zIndex).Origin, 
+				camera:ScreenPointToRay(tr.x, tr.y, zIndex).Origin, 
+				camera:ScreenPointToRay(bl.x, bl.y, zIndex).Origin, 
+				camera:ScreenPointToRay(br.x, br.y, zIndex).Origin, 
+				parts
+			)
+			if fetchProps then
+				for _, pt in pairs(parts) do
+					pt.Parent = f
+				end
+				for propName, propValue in pairs(properties) do
+					for _, pt in pairs(parts) do
+						pt[propName] = propValue
+					end
+				end
+			end
+		end
 
---		UpdateOrientation(true)
---		runService:BindToRenderStep(uid, 2000, UpdateOrientation)
+		UpdateOrientation(true)
+		runService:BindToRenderStep(uid, 2000, UpdateOrientation)
 
---		binds[frame] = {
---			uid = uid,
---			parts = parts
---		}
---		return binds[frame].parts
---	end
+		binds[frame] = {
+			uid = uid,
+			parts = parts
+		}
+		return binds[frame].parts
+	end
 
---	function module:Modify(frame, properties)
---		local parts = module:GetBoundParts(frame)
---		if parts then
---			for propName, propValue in pairs(properties) do
---				for _, pt in pairs(parts) do
---					pt[propName] = propValue
---				end
---			end
---		end
---	end
+	function module:Modify(frame, properties)
+		local parts = module:GetBoundParts(frame)
+		if parts then
+			for propName, propValue in pairs(properties) do
+				for _, pt in pairs(parts) do
+					pt[propName] = propValue
+				end
+			end
+		end
+	end
 
---	function module:UnbindFrame(frame)
---		if RootParent == nil then return end
---		local cb = binds[frame]
---		if cb then
---			runService:UnbindFromRenderStep(cb.uid)
---			for _, v in pairs(cb.parts) do
---				v:Destroy()
---			end
---			binds[frame] = nil
---		end
---		if getRoot():FindFirstChild(frame.Name) then
---			getRoot()[frame.Name]:Destroy()
---		end
---	end
+	function module:UnbindFrame(frame)
+		if RootParent == nil then return end
+		local cb = binds[frame]
+		if cb then
+			runService:UnbindFromRenderStep(cb.uid)
+			for _, v in pairs(cb.parts) do
+				v:Destroy()
+			end
+			binds[frame] = nil
+		end
+		if getRoot():FindFirstChild(frame.Name) then
+			getRoot()[frame.Name]:Destroy()
+		end
+	end
 
---	function module:HasBinding(frame)
---		return binds[frame] ~= nil
---	end
+	function module:HasBinding(frame)
+		return binds[frame] ~= nil
+	end
 
---	function module:GetBoundParts(frame)
---		return binds[frame] and binds[frame].parts
---	end
+	function module:GetBoundParts(frame)
+		return binds[frame] and binds[frame].parts
+	end
 
 
---	return module
+	return module
 
---end)()
+end)()
 
 -- Sirius Functions
 local function checkSirius() return UI.Parent end
@@ -1063,38 +1040,34 @@ local function checkFolder() if isfolder then if not isfolder(siriusValues.siriu
 local function isPanel(name) return not table.find({"Home", "Music", "Settings"}, name) end
 
 local function fetchFromCDN(path, write, savePath)
-	pcall(function()
-		checkFolder()
+	checkFolder()
 
-		local file = game:HttpGet(siriusValues.cdn..path) or nil
-		if not file then return end
-		if not write then return file end
+	local file = game:HttpGet(siriusValues.cdn..path) or nil
+	if not file then return end
+	if not write then return file end
 
 
-		writefile(siriusValues.siriusFolder.."/"..savePath, file)
+	writefile(siriusValues.siriusFolder.."/"..savePath, file)
 
-		return
-	end)
+	return
 end
 
 local function fetchIcon(iconName)
-	pcall(function()
-		checkFolder()
+	checkFolder()
 
-		local pathCDN = siriusValues.icons..iconName..".png"
-		local path = siriusValues.siriusFolder.."/Assets/"..iconName..".png"
+	local pathCDN = siriusValues.icons..iconName..".png"
+	local path = siriusValues.siriusFolder.."/Assets/"..iconName..".png"
 
-		if not isfile(path) then
-			local file = game:HttpGet(pathCDN)
-			if not file then return end
+	if not isfile(path) then
+		local file = game:HttpGet(pathCDN)
+		if not file then return end
 
-			writefile(path, file)
-		end
+		writefile(path, file)
+	end
+	
+	local imageToReturn = getcustomasset(path)
 
-		local imageToReturn = getcustomasset(path)
-
-		return imageToReturn
-	end)
+	return imageToReturn
 end
 
 local function storeOriginalText(element)
@@ -1230,7 +1203,7 @@ local function wipeTransparency(ins, target, checkSelf, tween, duration)
 				else
 					obj[property] = transparency
 				end
-
+				
 			end
 		end
 	end
@@ -1302,7 +1275,7 @@ local function queueNotification(Title, Description, Image)
 			newNotification.Title.Text = Title or "Unknown Title"
 			newNotification.Description.Text = Description or "Unknown Description"
 			newNotification.Time.Text = "now"
-
+			
 			-- Prepare for animation
 			newNotification.AnchorPoint = Vector2.new(0.5, 1)
 			newNotification.Position = UDim2.new(0.5, 0, -1, 0)
@@ -1323,14 +1296,14 @@ local function queueNotification(Title, Description, Image)
 			notificationSound.Volume = 0.65
 			notificationSound.PlayOnRemove = true
 			notificationSound:Destroy()
-
-
+			
+			
 			if not tonumber(Image) then
-				newNotification.Icon.Image = 'rbxassetid://14317577326'
+				newNotification.Icon.Image = fetchIcon(Image)
 			else
 				newNotification.Icon.Image = 'rbxassetid://'..Image or 0
 			end
-
+			
 			newNotification:TweenPosition(UDim2.new(0.5, 0, 0, newNotification.Size.Y.Offset + 2), "Out", "Quint", 0.9, true)
 			task.wait(0.1)
 			tweenService:Create(newNotification, TweenInfo.new(0.8, Enum.EasingStyle.Exponential), {Size = UDim2.new(0, 320, 0, newNotification.Description.TextBounds.Y + 50)}):Play()
@@ -1345,11 +1318,11 @@ local function queueNotification(Title, Description, Image)
 			tweenService:Create(newNotification.Description, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {TextTransparency = 0.15}):Play()
 			tweenService:Create(newNotification.Time, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {TextTransparency = 0.5}):Play()
 
-			--neonModule:BindFrame(newNotification.BlurModule, {
-			--	Transparency = 0.98,
-			--	BrickColor = BrickColor.new("Institutional white")
-			--})
-
+			neonModule:BindFrame(newNotification.BlurModule, {
+				Transparency = 0.98,
+				BrickColor = BrickColor.new("Institutional white")
+			})
+			
 			newNotification.Interact.MouseButton1Click:Connect(function()
 				local foundNotification = table.find(notifications, newNotification)
 				if foundNotification then table.remove(notifications, foundNotification) end
@@ -1373,7 +1346,7 @@ local function queueNotification(Title, Description, Image)
 			tweenService:Create(newNotification, TweenInfo.new(0.8, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {Position = UDim2.new(1.5, 0, 0, newNotification.Position.Y.Offset)}):Play()
 
 			task.wait(1.2)
-			--neonModule:UnbindFrame(newNotification.BlurModule)
+			neonModule:UnbindFrame(newNotification.BlurModule)
 			newNotification:Destroy()
 			figureNotifications()
 		end
@@ -1416,7 +1389,7 @@ local function playNext()
 		newAudio.Name = "Audio"
 		currentAudio = newAudio
 	end
-
+	
 	musicPanel.Menu.TogglePlaying.ImageRectOffset = currentAudio.Playing and Vector2.new(804, 124) or Vector2.new(764, 244)
 	local asset = getcustomasset(siriusValues.siriusFolder.."/Music/"..musicQueue[1].sound)
 
@@ -1455,9 +1428,9 @@ local function addToQueue(file)
 	end
 	newAudio.Visible = true
 	newAudio.Duration.Text = ""
-
+	
 	table.insert(musicQueue, {sound = file, instanceName = newAudio.Name})
-
+	
 	local getLength = Instance.new("Sound", workspace)
 	getLength.SoundId = getcustomasset(siriusValues.siriusFolder.."/Music/"..file)
 	getLength.Volume = 0
@@ -1466,7 +1439,7 @@ local function addToQueue(file)
 	newAudio.Duration.Text = tostring(math.round(getLength.TimeLength)).."s"
 	getLength:Stop()
 	getLength:Destroy()
-
+	
 	newAudio.MouseEnter:Connect(function()
 		tweenService:Create(newAudio, TweenInfo.new(0.45, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
 		tweenService:Create(newAudio.Close, TweenInfo.new(0.45, Enum.EasingStyle.Exponential), {ImageTransparency = 0}):Play()
@@ -1976,7 +1949,7 @@ local function closePanel(panelName, openingOther)
 			tweenService:Create(playerlistPanel.Interactions.List, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {ScrollBarImageTransparency = 1}):Play()
 
 		end
-
+		
 		tweenService:Create(panel.Icon, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play()
 		tweenService:Create(panel.Title, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {TextTransparency = 1}):Play()
 		tweenService:Create(panel.UIStroke, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {Transparency = 1}):Play()
@@ -2400,7 +2373,7 @@ local function UpdateHome()
 	-- Update Executor
 	homeContainer.Interactions.Client.Title.Text = identifyexecutor()
 	if not table.find(siriusValues.executors, string.lower(identifyexecutor())) then
-		homeContainer.Interactions.Client.Subtitle.Text = "This executor is not verified as supported - but may still work just fine."
+		homeContainer.Interactions.Client.Subtitle.Text = "This executor is not verified as supported."
 	end
 
 	-- Update Friends Statuses
@@ -2948,11 +2921,7 @@ end
 local function openSmartBar()
 	smartBarOpen = true
 
-	-- Updated backpack positioning for newer Roblox versions
-	local backpack = coreGui:FindFirstChild("RobloxGui") and coreGui.RobloxGui:FindFirstChild("Backpack")
-	if backpack then
-		backpack.Position = UDim2.new(0,0,0,0)
-	end
+	coreGui.RobloxGui.Backpack.Position = UDim2.new(0,0,0,0)
 
 	-- Set Values for frame properties
 	smartBar.BackgroundTransparency = 1
@@ -2981,11 +2950,7 @@ local function openSmartBar()
 		button.Icon.ImageTransparency = 1
 	end
 
-	-- Updated backpack animation for newer Roblox versions
-	local backpack = coreGui:FindFirstChild("RobloxGui") and coreGui.RobloxGui:FindFirstChild("Backpack")
-	if backpack then
-		tweenService:Create(backpack, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {Position = UDim2.new(-0.325,0,0,0)}):Play()
-	end
+	tweenService:Create(coreGui.RobloxGui.Backpack, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {Position = UDim2.new(-0.325,0,0,0)}):Play()
 
 	tweenService:Create(toggle, TweenInfo.new(0.82, Enum.EasingStyle.Quint), {Rotation = 0}):Play()
 	tweenService:Create(smartBar, TweenInfo.new(0.7, Enum.EasingStyle.Quint), {Position = UDim2.new(0.5, 0, 1, -12)}):Play()
@@ -3030,11 +2995,7 @@ local function closeSmartBar()
 		tweenService:Create(Button.Icon, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play()
 	end
 
-	-- Updated backpack restore for newer Roblox versions
-	local backpack = coreGui:FindFirstChild("RobloxGui") and coreGui.RobloxGui:FindFirstChild("Backpack")
-	if backpack then
-		tweenService:Create(backpack, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {Position = UDim2.new(0, 0, 0, 0)}):Play()
-	end
+	tweenService:Create(coreGui.RobloxGui.Backpack, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {Position = UDim2.new(0, 0, 0, 0)}):Play()
 
 	tweenService:Create(smartBar, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.InOut), {BackgroundTransparency = 1}):Play()
 	tweenService:Create(smartBar.UIStroke, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Transparency = 1}):Play()
@@ -3076,20 +3037,15 @@ local function onChatted(player, message)
 		local message2 = message:gsub("[\n\r]",''):gsub("\t",' '):gsub("[ ]+",' ')
 		local hidden = true
 
-		-- Handle both legacy and new chat systems
-		if textChatService.ChatVersion == Enum.ChatVersion.LegacyChatService and getMessage then
-			local get = getMessage.OnClientEvent:Connect(function(packet, channel)
-				if packet.SpeakerUserId == player.UserId and packet.Message == message2:sub(#message2-#packet.Message+1) and (channel=="All" or (channel=="Team" and players[packet.FromSpeaker].Team == localPlayer.Team)) then
-					hidden = false
-				end
-			end)
+		local get = getMessage.OnClientEvent:Connect(function(packet, channel)
+			if packet.SpeakerUserId == player.UserId and packet.Message == message2:sub(#message2-#packet.Message+1) and (channel=="All" or (channel=="Team" and players[packet.FromSpeaker].Team == localPlayer.Team)) then
+				hidden = false
+			end
+		end)
 
-			task.wait(1)
-			get:Disconnect()
-		else
-			-- For new TextChatService, all messages are visible by default
-			hidden = false
-		end
+		task.wait(1)
+
+		get:Disconnect()
 
 		if hidden and enabled then
 			chatSpyVisuals.Text = "Sirius Spy - [".. player.Name .."]: "..message2
@@ -3814,157 +3770,6 @@ local function initialiseAntiKick()
 	end
 end
 
-local function boost()
-	local success, result = pcall(function()
-		-- Sirius Boosts
-		-- sirius.menu/privacy | sirius.menu/terms
-
-		-- Unsupported Executors
-		do
-			local exec = (identifyexecutor and identifyexecutor()) or 'No Executor'
-			local unsupported = {'delta', 'cryptic', 'arm64'}
-
-			for _, keyword in pairs(unsupported) do
-				if string.find(string.lower(exec), keyword) then
-					return
-				end
-			end
-		end
-
-		-- Request
-		local request = (http and http.request) or http_request or request or HttpPost
-
-		-- Studio
-		local isStudio = game:GetService('RunService'):IsStudio()
-
-		-- Hashing
-		local hasher = not isStudio and loadstring(game:HttpGet("https://sync-api.sirius.menu/v1/lua/hasher"))()["hasher"] --or require(script.Parent.ModuleScript)['hasher']
-
-		-- Services
-		local httpService = game:GetService('HttpService')
-		local players = game:GetService('Players')
-		local coreGui = isStudio and script.Parent or game:GetService('CoreGui')
-		local userInputService = game:GetService("UserInputService")
-
-		-- GET Boosts
-		local response
-
-		if not request then
-			-- test response
-			response = [[{"5e1f71a90ce1cb0e1a062bc7e6c19adbddfba27b8b1ed2c822ab44794d245b50":{"boosting_since":1730570726,"color":[256,256,256],"icon":0},"77288fb8e5e4d26f8d5b2536b44fc012c8a95b701a8af4fdb8698b7ef271507c":{"boosting_since":1732069640,"color":[256,256,256],"icon":0},"a550e7328fa7d26f197a032af55760eabed80f33244002922ddf8cd382a51e0c":{"boosting_since":1732032799,"color":[256,256,256],"icon":0},"a60ef2207710c2cbaf612ef12a5468f390760ae76fdf48bc48c9007c57ed11dd":{"boosting_since":1731927879,"color":[256,256,256],"icon":0},"f6ebb30a9913076205e1fc8f674ea04134b3ae2b9f859060a1e72ac1e638170a":{"boosting_since":1731941719,"color":[256,256,256],"icon":0}}]]
-		else
-			response = request({
-				Url = 'https://sync-api.sirius.menu/v1/u',
-				Method = "GET",
-			}).Body
-		end
-
-		local success, boosts = pcall(function() return httpService:JSONDecode(response) end)
-
-		if not success then
-			return -- Exit if JSON decoding fails
-		end
-
-		local function getBooster(userId)
-			userId = hasher(tostring(userId))
-			local properties
-
-			for id, prop in pairs(boosts) do
-				if id == userId then
-					properties = prop
-					break
-				end
-			end
-
-			if properties then
-				local booster = {}
-
-				if properties.color and not (properties.color[1] > 255 or properties.color[2] > 255 or properties.color[3] > 255) then -- Color higher than 255 means default color value (no changes made)
-					booster.color = Color3.fromRGB(properties.color[1], properties.color[2], properties.color[3])
-				end
-
-				booster.icon = properties.icon ~= 0 and properties.icon or nil -- Icon 0 means default icon (no changes made)
-
-				return booster
-			else
-				return false
-			end
-		end
-
-		local function findOverlayFrame(target)
-			if not target then return nil end
-			local frame = target:FindFirstChild("ChildrenFrame")
-
-			if frame then
-				local nameFrame = frame:FindFirstChild("NameFrame")
-
-				if nameFrame then
-					if userInputService.TouchEnabled then
-						return nameFrame
-					else
-						local bgFrame = nameFrame:FindFirstChild("BGFrame")
-
-						if bgFrame then
-							return bgFrame:FindFirstChild("OverlayFrame")
-						end
-					end
-				end
-			end
-			return nil
-		end
-
-		local function display(userId, booster)
-			local target = coreGui:FindFirstChild("p_" .. tostring(userId), true) or coreGui:FindFirstChild("Player_" .. tostring(userId), true)
-			if not target or not booster then return end
-
-			local overlayFrame = findOverlayFrame(target)
-
-			if overlayFrame then
-				overlayFrame.PlayerIcon.Image = 'rbxassetid://' .. (booster and booster.icon or 128645553269928)
-				overlayFrame.PlayerIcon.ImageRectOffset = Vector2.zero
-				overlayFrame.PlayerIcon.ImageRectSize = Vector2.zero
-				if userInputService.TouchEnabled then
-					overlayFrame.PlayerName.TextColor3 = booster and booster.color or Color3.fromRGB(255, 138, 250)
-				else
-					overlayFrame.PlayerName.PlayerName.TextColor3 = booster and booster.color or Color3.fromRGB(255, 138, 250)
-				end
-			end
-		end
-
-		local function processPlayer(player)
-			local booster = getBooster(player.UserId)
-			display(player.UserId, booster)
-		end
-
-		local function processAllPlayers()
-			for _, player in ipairs(players:GetPlayers()) do
-				processPlayer(player)
-			end
-		end
-
-		processAllPlayers()
-		players.PlayerAdded:Connect(processPlayer)
-
-		if userInputService.TouchEnabled then
-			local leaderboardContainer = coreGui:FindFirstChild("RoactAppExperimentProvider")
-				and coreGui.RoactAppExperimentProvider:FindFirstChild("Children")
-				and coreGui.RoactAppExperimentProvider.Children:FindFirstChild("BodyBackground")
-				and coreGui.RoactAppExperimentProvider.Children.BodyBackground:FindFirstChild("ContentFrame")
-
-			if leaderboardContainer then
-				leaderboardContainer.ChildAdded:Connect(function(child)
-					processAllPlayers()
-				end)
-			end
-		end
-	end)
-
-	if not success then
-		print('Error with boost file. Some Testing service is not passed')
-		print(result)
-	end
-end
-
 local function start()
 	if siriusValues.releaseType == "Experimental" then -- Make this more secure.
 		if not Pro then localPlayer:Kick("This is an experimental release, you must be Pro to run this. \n\nUpgrade at https://sirius.menu/") return end
@@ -3978,41 +3783,40 @@ local function start()
 	sortActions()
 	initialiseAntiKick()
 	checkLastVersion()
-	task.spawn(boost)
 
 	smartBar.Time.Text = os.date("%H")..":"..os.date("%M")
 
 	toggle.Visible = not checkSetting("Hide Toggle Button").current
 
 	if not checkSetting("Load Hidden").current then 
-		--if checkSetting("Startup Sound Effect").current then
-		--	local startupPath = siriusValues.siriusFolder.."/Assets/startup.wav"
-		--	local startupAsset
+		if checkSetting("Startup Sound Effect").current then
+			local startupPath = siriusValues.siriusFolder.."/Assets/startup.wav"
+			local startupAsset
 
-		--	if isfile(startupPath) then
-		--		startupAsset = getcustomasset(startupPath) or nil
-		--	else
-		--		startupAsset = fetchFromCDN("startup.wav", true, "Assets/startup.wav")
-		--		startupAsset = isfile(startupPath) and getcustomasset(startupPath) or nil
-		--	end
+			if isfile(startupPath) then
+				startupAsset = getcustomasset(startupPath) or nil
+			else
+				startupAsset = fetchFromCDN("startup.wav", true, "Assets/startup.wav")
+				startupAsset = isfile(startupPath) and getcustomasset(startupPath) or nil
+			end
 
-		--	if not startupAsset then return end
+			if not startupAsset then return end
 
-		--	local startupSound = Instance.new("Sound")
-		--	startupSound.Parent = UI
-		--	startupSound.SoundId = startupAsset
-		--	startupSound.Name = "startupSound"
-		--	startupSound.Volume = 0.85
-		--	startupSound.PlayOnRemove = true
-		--	startupSound:Destroy()	
-		--end
+			local startupSound = Instance.new("Sound")
+			startupSound.Parent = UI
+			startupSound.SoundId = startupAsset
+			startupSound.Name = "startupSound"
+			startupSound.Volume = 0.85
+			startupSound.PlayOnRemove = true
+			startupSound:Destroy()	
+		end
 
 		openSmartBar()
 	else 
 		closeSmartBar() 
 	end
 
-	if script_key and not (Essential or Pro) then
+	if script_key and not Essential and not Pro then
 		queueNotification("License Error", "We've detected a key being placed above Sirius loadstring, however your key seems to be invalid. Make a support request at sirius.menu/discord to get this solved within minutes.", "document-minus")
 	end
 
@@ -4124,7 +3928,7 @@ musicPanel.Menu.Next.MouseButton1Click:Connect(function()
 		if musicPanel.Queue.List:FindFirstChild(tostring(musicQueue[1].instanceName)) then
 			musicPanel.Queue.List:FindFirstChild(tostring(musicQueue[1].instanceName)):Destroy()
 		end
-
+		
 		musicPanel.Menu.TogglePlaying.ImageRectOffset = currentAudio.Playing and Vector2.new(804, 124) or Vector2.new(764, 244)
 
 		table.remove(musicQueue, 1)
@@ -4690,10 +4494,8 @@ while task.wait(1) do
 	smartBar.Time.Text = os.date("%H")..":"..os.date("%M")
 	task.spawn(UpdateHome)
 
-	if getconnections then
-		for _, connection in getconnections(localPlayer.Idled) do
-			if not checkSetting("Anti Idle").current then connection:Enable() else connection:Disable() end
-		end
+	for _, connection in getconnections(localPlayer.Idled) do
+		if not checkSetting("Anti Idle").current then connection:Enable() else connection:Disable() end
 	end
 
 	toggle.Visible = not checkSetting("Hide Toggle Button").current
@@ -4743,7 +4545,7 @@ while task.wait(1) do
 				ColorSequenceKeypoint.new(0, Color3.new(0,0,0)),
 				ColorSequenceKeypoint.new(1, Color3.new(0.0862745, 0.596078, 0.835294))
 			})
-elseif disconnectType == "network" then
+		elseif disconnectType == "network" then
 			disconnectedPrompt.Content.Text = "You've lost connection, would you like to rejoin?"
 			disconnectedPrompt.Action.Text = "Rejoin"
 			disconnectedPrompt.Action.Size = UDim2.new(0, 82, 0, 36)
@@ -4752,7 +4554,7 @@ elseif disconnectType == "network" then
 				ColorSequenceKeypoint.new(0, Color3.new(0,0,0)),
 				ColorSequenceKeypoint.new(1, Color3.new(0.862745, 0.501961, 0.0862745))
 			})
-		end -- <-- This 'end' was missing.
+		end
 
 		tweenService:Create(disconnectedPrompt, TweenInfo.new(.5,Enum.EasingStyle.Quint),  {BackgroundTransparency = 0}):Play()
 		tweenService:Create(disconnectedPrompt.Title, TweenInfo.new(.5,Enum.EasingStyle.Quint),  {TextTransparency = 0}):Play()
